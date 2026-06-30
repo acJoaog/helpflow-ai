@@ -1,0 +1,36 @@
+id,epic,title,persona,acao,beneficio,criterio,priority,points
+US-101,E1,Criar conta de empresa (tenant),gestora,criar uma conta de empresa (tenant),minha equipe tenha um espaço isolado,"Dado um e-mail corporativo válido, quando cadastro a empresa, então um tenant isolado é criado com schema/linha própria",must,5
+US-102,E1,Login com isolamento de tenant,atendente,fazer login com e-mail e senha,acessar apenas os dados do meu tenant,"Dado um login válido, então recebo um JWT escopado ao tenant_id; tentar acessar dado de outro tenant retorna 403",must,3
+US-103,E1,Convite de atendentes com papéis,gestora,convidar atendentes por e-mail com papéis definidos (admin/atendente),controlar permissões,"Dado um convite enviado, quando o atendente aceita, então ele recebe o papel definido e RBAC é aplicado em todas as rotas",must,5
+US-104,E1,Recuperação de senha,usuária,recuperar minha senha com segurança,não perder acesso à conta,Token de reset expira em 15 min e é de uso único,should,2
+US-105,E1,Login social (OAuth2),gestora,habilitar login social (OAuth2),reduzir fricção de onboarding,Login via Google funciona e vincula ao tenant correto,could,5
+US-201,E2,Abertura de ticket,cliente final,abrir um ticket descrevendo meu problema,receber ajuda,Ticket criado com status novo e associado ao tenant correto,must,3
+US-202,E2,Fila de tickets em tempo real,atendente,ver a fila de tickets em tempo real,priorizar atendimentos,Novo ticket aparece no painel via WebSocket sem reload,must,5
+US-203,E2,Resposta em tempo real,atendente,responder um ticket e ver a resposta refletida instantaneamente,o cliente receba rápido,Latência de entrega da mensagem menor que 1s em condição normal,must,5
+US-204,E2,SLA por prioridade,gestora,definir SLAs por prioridade,garantir tempo de resposta,Ticket vencido muda visualmente de status e gera alerta,should,5
+US-205,E2,Histórico do cliente,atendente,ver o histórico completo do cliente,dar contexto à resposta,Histórico carrega em uma única consulta sem N+1,should,3
+US-301,E3,Resposta automática via RAG,cliente final,receber resposta automática quando minha dúvida já está documentada,não esperar um humano,IA responde em menos de 5s usando artigos da base com similaridade acima do limiar,must,13
+US-302,E3,Escalonamento por baixa confiança,gestora,que o agente escale para humano quando não tiver confiança,evitar respostas erradas,Score de confiança abaixo do limiar dispara escalonamento automático com justificativa registrada,must,8
+US-303,E3,Resumo de contexto no escalonamento,atendente,ver o raciocínio resumido do agente antes de assumir um ticket escalado,não perder contexto,Painel mostra resumo gerado pelo agente sobre o que já foi tentado e por que escalou,should,5
+US-304,E3,Métricas de auto-resolução,gestora,ver métricas de quantos tickets a IA resolveu sozinha,medir ROI,Dashboard mostra percentual de auto-resolução por período,should,3
+US-305,E3,Escalonamento sob demanda,cliente final,poder pedir explicitamente para falar com um humano,resolver casos sensíveis,Comando do usuário força escalonamento independentemente do score,must,2
+US-401,E4,Cadastro de artigos de ajuda,gestora,cadastrar artigos de ajuda,alimentar o agente de IA,Artigo salvo gera embedding automaticamente via job assíncrono,must,5
+US-402,E4,Importação em lote da base,gestora,importar uma base de conhecimento existente (CSV/Markdown),não recadastrar tudo manualmente,Importação em lote processa N artigos e reporta falhas individualmente,could,5
+US-403,E4,Relatório de artigos não usados,gestora,ver quais artigos nunca são usados pelo agente,revisar conteúdo desatualizado,Relatório de uso de artigos por período,could,3
+US-501,E5,Assinatura de plano,gestora,assinar um plano com cartão de crédito,ativar a conta,Integração com Stripe Checkout cria assinatura e libera o tenant,must,5
+US-502,E5,Bloqueio por limite de plano,gestora,ser bloqueada de criar novos atendentes ao atingir o limite do plano,respeitar o contrato,Tentativa acima do limite retorna erro claro com sugestão de upgrade,should,3
+US-503,E5,Histórico de faturas,gestora,ver minha fatura e histórico de pagamentos,controle financeiro,Listagem paginada de faturas via Stripe API,should,3
+US-601,E6,Dashboard de métricas,gestora,um dashboard com métricas-chave,acompanhar a operação,"Cards de tempo médio de resposta, percentual de auto-resolução, tickets abertos",must,5
+US-602,E6,Busca e filtro de tickets,atendente,filtrar e buscar tickets,encontrar casos específicos rápido,"Busca por status, prioridade, cliente, com resposta abaixo de 300ms em base de teste",should,3
+US-701,E7,Push notification de escalonamento,atendente,receber push notification de ticket escalado,responder mesmo fora do computador,Notificação chega em até 10s após escalonamento,must,8
+US-702,E7,Resposta via mobile,atendente,responder um ticket pelo celular,não depender do desktop,Funcionalidade de resposta com paridade mínima do painel web,must,8
+US-801,E8,Métricas de latência e erro,desenvolvedor,métricas de latência e erro de cada serviço,identificar gargalos,Dashboards Grafana com p50/p95/p99 por serviço,must,5
+US-802,E8,Logs centralizados e correlacionáveis,desenvolvedor,logs centralizados e correlacionáveis por request,depurar incidentes,Trace ID propagado entre serviços e visível no Loki/Grafana,should,5
+US-803,E8,Alertas automáticos,desenvolvedor,alertas automáticos quando a taxa de erro passar de um limiar,reagir antes do cliente notar,Alerta disparado via webhook em até 1 min após o limiar ser ultrapassado,could,3
+US-901,E9,Isolamento de dados entre tenants,gestora,garantir que dados de um tenant nunca vazem para outro,confiança do cliente,Testes automatizados de isolamento (row-level security) cobrindo todas as rotas sensíveis,must,8
+US-902,E9,Exportação e exclusão de dados (LGPD),gestora,exportar e excluir os dados da minha empresa,conformidade com LGPD,Exportação completa em JSON e exclusão lógica/física conforme política,should,5
+US-903,E9,Rate limiting por tenant e IP,desenvolvedor,rate limiting por tenant e por IP,mitigar abuso e ataques de força bruta,Requisições acima do limite retornam 429 com header de retry,must,3
+US-904,E9,Log de auditoria administrativo,gestora,um log de auditoria de ações administrativas,rastrear mudanças sensíveis,Toda ação de admin é registrada de forma imutável,should,3
+US-1001,E10,Pipeline de CI,desenvolvedor,pipeline de CI que rode testes a cada push,evitar regressões,Pipeline roda lint mais testes mais build em menos de 10 min,must,5
+US-1002,E10,Deploy automatizado em staging,desenvolvedor,deploy automatizado para ambiente de staging,validar antes de produção,Merge na branch develop dispara deploy automático em staging,should,5
+US-1003,E10,Infraestrutura como código,desenvolvedor,infraestrutura como código,recriar o ambiente de forma reprodutível,terraform apply provisiona toda a infra base sem passos manuais,could,8
