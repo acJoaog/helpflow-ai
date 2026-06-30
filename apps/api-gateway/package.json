@@ -1,0 +1,11 @@
+{
+  "name": "api-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"api-gateway: dev script ainda não implementado\"",
+    "build": "echo \"api-gateway: build script ainda não implementado\"",
+    "lint": "echo \"api-gateway: lint script ainda não implementado\"",
+    "test": "echo \"api-gateway: test script ainda não implementado\""
+  }
+}
