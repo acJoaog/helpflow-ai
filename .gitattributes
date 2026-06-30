@@ -1,0 +1,18 @@
+# Normaliza quebras de linha no repositório (LF), independente do SO do
+# desenvolvedor. Evita diffs gigantes causados só por CRLF vs LF e garante
+# que scripts/Dockerfiles funcionem corretamente dentro de containers Linux.
+
+* text=auto eol=lf
+
+# Arquivos binários — nunca normalizar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+
+# Scripts que precisam de LF mesmo no Windows (rodam dentro de containers Linux)
+*.sh text eol=lf
+Dockerfile text eol=lf
