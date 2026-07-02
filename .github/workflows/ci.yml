@@ -9,6 +9,26 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: helpflow
+          POSTGRES_PASSWORD: helpflow
+          POSTGRES_DB: helpflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U helpflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://helpflow:helpflow@localhost:5432/helpflow?schema=public
+      JWT_SECRET: ci-test-secret-not-used-in-production
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,11 +45,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Necessário separadamente do install: o client do Prisma depende do
+      # schema do api-gateway e precisa ser regenerado a cada mudança nele.
+      - name: Generate Prisma Client
+        run: pnpm --filter api-gateway prisma:generate
+
+      # Aplica as migrations (incluindo RLS — ver docs/adr/0004) contra o
+      # Postgres do serviço acima, para que os testes e2e rodem contra um
+      # banco com o mesmo isolamento de tenant usado em produção.
+      - name: Apply database migrations
+        run: pnpm --filter api-gateway exec prisma migrate deploy
+
       - name: Lint
         run: pnpm lint
 
-      - name: Run tests
+      - name: Run unit tests
         run: pnpm test
+
+      - name: Run e2e tests (api-gateway)
+        run: pnpm --filter api-gateway test:e2e
 
       - name: Build
         run: pnpm build
