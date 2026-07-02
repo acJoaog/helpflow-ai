@@ -1,0 +1,100 @@
+# Referência técnica — NÃO habilitado por padrão neste projeto.
+# Ver decisão em docs/adr/0002-automacao-board-kanban.md
+# Para ativar: renomeie para .yml e mova para .github/workflows/
+
+name: Move linked issue to Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  move-to-code-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move linked issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECTS_TOKEN }}
+          script: |
+            // Status que o item deve assumir no board
+            const TARGET_STATUS = "Code Review / QA";
+            const PROJECT_NUMBER = 1; // ajuste para o número do seu projeto
+
+            const prBody = context.payload.pull_request.body || "";
+            const closesRegex = /(close[sd]?|fix(es|ed)?|resolve[sd]?)\s+#(\d+)/gi;
+            const issueNumbers = [...prBody.matchAll(closesRegex)].map(m => Number(m[3]));
+
+            if (issueNumbers.length === 0) {
+              console.log("Nenhuma issue vinculada via 'Closes #N' encontrada na PR.");
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Descobre o projeto (v2) do repositório
+            const projectQuery = await github.graphql(`
+              query($owner: String!, $repo: String!, $number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  projectV2(number: $number) {
+                    id
+                    fields(first: 20) {
+                      nodes {
+                        ... on ProjectV2SingleSelectField {
+                          id
+                          name
+                          options { id name }
+                        }
+                      }
+                    }
+                  }
+                }
+              }`, { owner, repo, number: PROJECT_NUMBER });
+
+            const project = projectQuery.repository.projectV2;
+            const statusField = project.fields.nodes.find(f => f.name === "Status");
+            const targetOption = statusField.options.find(o => o.name === TARGET_STATUS);
+
+            if (!statusField || !targetOption) {
+              console.log(`Campo Status ou opção "${TARGET_STATUS}" não encontrados.`);
+              return;
+            }
+
+            for (const issueNumber of issueNumbers) {
+              const issueQuery = await github.graphql(`
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    issue(number: $number) {
+                      projectItems(first: 10) {
+                        nodes { id project { id } }
+                      }
+                    }
+                  }
+                }`, { owner, repo, number: issueNumber });
+
+              const item = issueQuery.repository.issue.projectItems.nodes
+                .find(i => i.project.id === project.id);
+
+              if (!item) {
+                console.log(`Issue #${issueNumber} não está no projeto ${PROJECT_NUMBER}.`);
+                continue;
+              }
+
+              await github.graphql(`
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId,
+                    itemId: $itemId,
+                    fieldId: $fieldId,
+                    value: { singleSelectOptionId: $optionId }
+                  }) { projectV2Item { id } }
+                }`, {
+                projectId: project.id,
+                itemId: item.id,
+                fieldId: statusField.id,
+                optionId: targetOption.id,
+              });
+
+              console.log(`Issue #${issueNumber} movida para "${TARGET_STATUS}".`);
+            }
